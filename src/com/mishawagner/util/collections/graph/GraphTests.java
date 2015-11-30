@@ -50,6 +50,8 @@ public class GraphTests {
         // Add them to the graph
         graph.addAll(items);
 
+        items = graph.getAllNodes();
+
         // Add random links
         Random rand = new Random(1234);
         for (int i = 1; i < items.size() * 5; i++) {
