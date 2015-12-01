@@ -1,8 +1,11 @@
 package com.mishawagner.util.collections.tree;
 
 import com.mishawagner.util.collections.Collection;
-import com.sun.org.apache.xml.internal.utils.Trie;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -117,9 +120,9 @@ public class TrieTree<T> extends Collection<List<T>> {
     for (TrieTree<T> n : children) {
       List<List<T>> currentAll = n.getAll();
 
-      for (List<T> l : currentAll) {
-        if (item != null) l.add(0, item);
-      }
+      currentAll.stream()
+          .filter(l -> item != null)
+          .forEach(l -> l.add(0, item));
 
       all.addAll(currentAll);
     }
@@ -141,6 +144,13 @@ public class TrieTree<T> extends Collection<List<T>> {
     return true;
   }
 
+  public int maxDepth() {
+    return 1 + children
+        .stream()
+        .mapToInt(TrieTree::maxDepth)
+        .max().orElse(0);
+  }
+
   @Override
   public String toString() {
     String s = item + "[" + terminatedHere + "]" + "(";
@@ -157,47 +167,40 @@ public class TrieTree<T> extends Collection<List<T>> {
   public static void main(String[] args) {
     TrieTree<Character> t = new TrieTree<>();
 
-//    String[] elements = ("Shall I compare thee to a summer's day?\n" +
-//        "Thou art more lovely and more temperate:\n" +
-//        "Rough winds do shake the darling buds of May,\n" +
-//        "And summer's lease hath all too short a date").split(" ");
-
-    String[] elements = "abc abc abcd abc abcd".split(" ");
+    String[] elements = readStringsFromFile();
 
     for (String s : elements) {
       t.insert(stringToCharList(s));
     }
 
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abcd")));
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abcd")));
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abc")));
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abc")));
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abc")));
-    System.out.println(t);
-    System.out.println(t.getAll());
-    System.out.println(t.remove(stringToCharList("abc")));
-    System.out.println(t);
-    System.out.println(t.getAll());
+//    System.out.println(t);
+//    System.out.println(t.getAll());
+    System.out.println(t.size());
+    System.out.println(t.maxDepth());
+    System.out.println(t.contains(stringToCharList("clair")));
+  }
 
-    System.out.println(t);
-    System.out.println(t.getAll());
+  private static String[] readStringsFromFile() {
+    String all = "";
+
+    try {
+      for (String s : Files.readAllLines(Paths.get("/home/misha/Downloads/big.txt"))) {
+        all += s;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return all.split(" ");
   }
 
   private static List<Character> stringToCharList(String s) {
     List<Character> list = new ArrayList<>();
 
     for (Character c : s.toCharArray()) {
-      list.add(c);
+      if (Character.isAlphabetic(c)) {
+        list.add(Character.toLowerCase(c));
+      }
     }
 
     return list;
